@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="GestaoUpc.Api/GestaoUpc.Api.csproj" />
+    <Project Path="GestaoUpc.Domain.Data/GestaoUpc.Domain.Data.csproj" />
+    <Project Path="GestaoUpc.Domain/GestaoUpc.Domain.csproj" />
+  </Folder>
+  <Project Path="GestaoUpcBack.AppHost/GestaoUpcBack.AppHost.csproj" />
+  <Project Path="GestaoUpcBack.ServiceDefaults/GestaoUpcBack.ServiceDefaults.csproj" />
+</Solution>
