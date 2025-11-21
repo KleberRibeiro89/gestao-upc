@@ -3,19 +3,20 @@ using GestaoUpc.Domain.Services;
 using GestaoUpc.Domain.DTOs.Requests.UserRequestSource;
 using GestaoUpc.Domain.DTOs.Responses.UserResponseSource;
 using GestaoUpc.Domain.DTOs.Responses;
+using GestaoUpc.Api.Configurations;
 
 namespace GestaoUpc.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class UserController : ControllerBase
+public class UserController : GestaoUpcController
 {
     private readonly IUserService _userService;
     private readonly ILogger<UserController> _logger;
-
     public UserController(
-        IUserService userService, 
-        ILogger<UserController> logger)
+        IHttpContextAccessor httpContextAccessor,
+        IUserService userService,
+        ILogger<UserController> logger) : base(httpContextAccessor)
     {
         _userService = userService;
         _logger = logger;
@@ -80,21 +81,21 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Obtém todos os usuários
+    /// Obtém usuários paginados
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(List<UserResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAll()
+    [ProducesResponseType(typeof(PagedResponse<UserResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPaged([FromQuery] UserPagedRequest request)
     {
         try
         {
-            var users = await _userService.GetAllAsync();
-            return Ok(ResponseBase.Ok(users));
+            var result = await _userService.GetPagedAsync(request);
+            return PrepareResponse(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro ao buscar todos os usuários");
-            return StatusCode(500, new { message = "Erro interno do servidor" });
+            _logger.LogError(ex, "Erro ao buscar usuários paginados");
+            return StatusCode(500, ResponseBase.Fail("Erro interno do servidor"));
         }
     }
 

@@ -1,6 +1,9 @@
 ﻿using GestaoUpc.Domain.Data.Contexts;
+using GestaoUpc.Domain.Data.Extensions;
 using GestaoUpc.Domain.Entities;
 using GestaoUpc.Domain.Repositories;
+using GestaoUpc.Domain.DTOs.Requests.PagedRequest;
+using GestaoUpc.Domain.DTOs.Responses;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -142,5 +145,13 @@ public class RepositoryBase<T> : IRepositoryBase<T> where T : BaseEntity
     {
         var list = await GetAllAsync(x => navigationIds.Contains(x.NavigationId));
         await DeleteRangeAsync(list);
+    }
+
+    public async Task<DynamicQueryResult<T>> GetPagedAsync(DynamicQuery query)
+    {
+        var queryable = _dbSet.AsNoTracking().Where(x => x.Active).AsQueryable();
+        
+        // Usa a extensão ToPagedAsync que já está implementada
+        return await queryable.ToPagedAsync(query);
     }
 }

@@ -1,4 +1,6 @@
 ﻿using GestaoUpc.Domain.Entities;
+using GestaoUpc.Domain.DTOs.Requests.PagedRequest;
+using GestaoUpc.Domain.DTOs.Responses;
 using System.Linq.Expressions;
 
 namespace GestaoUpc.Domain.Repositories;
@@ -17,4 +19,5 @@ public interface IRepositoryBase<T> where T : BaseEntity
     Task DeleteRangeAsync(List<T> entities);
     Task DeleteRangeAsync(List<Guid> navigationIds);
     Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
+    Task<DynamicQueryResult<T>> GetPagedAsync(DynamicQuery query);
 }

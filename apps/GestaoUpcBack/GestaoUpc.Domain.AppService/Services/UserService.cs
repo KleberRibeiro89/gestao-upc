@@ -1,11 +1,14 @@
 using AutoMapper;
 using FluentValidation;
 using FluentValidation.Results;
+using GestaoUpc.Domain.DTOs.Requests.PagedRequest;
 using GestaoUpc.Domain.DTOs.Requests.UserRequestSource;
+using GestaoUpc.Domain.DTOs.Responses;
 using GestaoUpc.Domain.DTOs.Responses.UserResponseSource;
 using GestaoUpc.Domain.Entities;
 using GestaoUpc.Domain.Repositories;
 using GestaoUpc.Domain.Services;
+using Newtonsoft.Json;
 
 namespace GestaoUpc.Domain.AppService.Services;
 
@@ -64,6 +67,20 @@ public class UserService : IUserService
     {
         var users = await _userRepository.GetAllAsync();
         return _mapper.Map<List<UserResponse>>(users);
+    }
+
+    public async Task<ResponseBase<DynamicQueryResult<UserResponse>>> GetPagedAsync(UserPagedRequest request)
+    {
+        if (!string.IsNullOrEmpty(request.FilterString))
+            request.Filter = JsonConvert.DeserializeObject<List<PropertyFilter>>(request.FilterString);
+
+        if (!string.IsNullOrEmpty(request.OrderByString))
+            request.OrderBy = JsonConvert.DeserializeObject<List<PropertySort>>(request.OrderByString);
+
+        var result = await _userRepository.GetPagedAsync(request);
+
+       
+        return ResponseBase.Ok(result);
     }
 
     public async Task<(UserResponse? User, ValidationResult? ValidationResult)> UpdateAsync(UpdateUserRequest request)
