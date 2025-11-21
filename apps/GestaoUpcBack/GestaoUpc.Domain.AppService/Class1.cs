@@ -1,4 +1,4 @@
-﻿namespace GestaoUpc.Domain.Data
+﻿namespace GestaoUpc.Domain.AppService
 {
     public class Class1
     {

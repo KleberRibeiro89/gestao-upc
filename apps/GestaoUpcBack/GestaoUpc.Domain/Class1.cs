@@ -1,4 +1,5 @@
-﻿namespace GestaoUpc.Domain
+﻿
+namespace GestaoUpc.Domain
 {
     public class Class1
     {

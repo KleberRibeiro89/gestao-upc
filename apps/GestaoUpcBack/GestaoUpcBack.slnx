@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="GestaoUpc.Api/GestaoUpc.Api.csproj" />
+    <Project Path="GestaoUpc.Domain.AppService/GestaoUpc.Domain.AppService.csproj" Id="47378af8-d080-4038-b9a8-8b9c0e0cb7a7" />
     <Project Path="GestaoUpc.Domain.Data/GestaoUpc.Domain.Data.csproj" />
     <Project Path="GestaoUpc.Domain/GestaoUpc.Domain.csproj" />
+    <Project Path="GestaoUpc.Infra.Ioc/GestaoUpc.Infra.Ioc.csproj" Id="d122fad0-e5a2-403c-9d9d-d704c6b212b9" />
   </Folder>
   <Project Path="GestaoUpcBack.AppHost/GestaoUpcBack.AppHost.csproj" />
   <Project Path="GestaoUpcBack.ServiceDefaults/GestaoUpcBack.ServiceDefaults.csproj" />
