@@ -8,6 +8,7 @@ using GestaoUpc.Domain.DTOs.Responses.UserResponseSource;
 using GestaoUpc.Domain.Entities;
 using GestaoUpc.Domain.Repositories;
 using GestaoUpc.Domain.Services;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 
 namespace GestaoUpc.Domain.AppService.Services;
@@ -17,18 +18,27 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IValidator<CreateUserRequest> _createUserValidator;
     private readonly IValidator<UpdateUserRequest> _updateUserValidator;
+    private readonly IValidator<ChangePasswordOnFirstAccessRequest> _changePasswordOnFirstAccessValidator;
     private readonly IMapper _mapper;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IConfiguration _configuration;
 
     public UserService(
         IUserRepository userRepository,
         IValidator<CreateUserRequest> createUserValidator,
         IValidator<UpdateUserRequest> updateUserValidator,
-        IMapper mapper)
+        IValidator<ChangePasswordOnFirstAccessRequest> changePasswordOnFirstAccessValidator,
+        IMapper mapper,
+        IPasswordHasher passwordHasher,
+        IConfiguration configuration)
     {
         _userRepository = userRepository;
         _createUserValidator = createUserValidator;
         _updateUserValidator = updateUserValidator;
+        _changePasswordOnFirstAccessValidator = changePasswordOnFirstAccessValidator;
         _mapper = mapper;
+        _passwordHasher = passwordHasher;
+        _configuration = configuration;
     }
 
     public async Task<(UserResponse? User, ValidationResult? ValidationResult)> CreateAsync(CreateUserRequest request)
@@ -44,6 +54,11 @@ public class UserService : IUserService
             throw new InvalidOperationException($"Já existe um usuário com o email {request.Email}");
 
         var user = _mapper.Map<User>(request);
+
+        var defaultPassword = _configuration["UserSettings:DefaultPassword"] ?? "123456";
+        user.Password = _passwordHasher.HashPassword(defaultPassword);
+        user.IsFirstAccess = true;
+
         var createdUser = await _userRepository.AddAsync(user);
         return (_mapper.Map<UserResponse>(createdUser), null);
     }
@@ -79,8 +94,16 @@ public class UserService : IUserService
 
         var result = await _userRepository.GetPagedAsync(request);
 
-       
-        return ResponseBase.Ok(result);
+        // Mapeia os resultados de User para UserResponse
+        var mappedResult = new DynamicQueryResult<UserResponse>(result.PageSize)
+        {
+            PageNumber = result.PageNumber,
+            TotalRows = result.TotalRows,
+            ResultType = result.ResultType,
+            Result = _mapper.Map<List<UserResponse>>(result.Result.ToList())
+        };
+
+        return ResponseBase.Ok(mappedResult);
     }
 
     public async Task<(UserResponse? User, ValidationResult? ValidationResult)> UpdateAsync(UpdateUserRequest request)
@@ -91,10 +114,7 @@ public class UserService : IUserService
             return (null, validationResult);
         }
 
-        var existingUser = await _userRepository.GetByIdAsync(request.NavigationId);
-        if (existingUser == null)
-            throw new InvalidOperationException($"Usuário com ID {request.NavigationId} não encontrado");
-
+        var existingUser = await _userRepository.GetByIdAsync(request.NavigationId) ?? throw new InvalidOperationException($"Usuário com ID {request.NavigationId} não encontrado");
         if (existingUser.Email != request.Email)
         {
             var userWithEmail = await GetUserByEmailAsync(request.Email);
@@ -103,6 +123,41 @@ public class UserService : IUserService
         }
 
         var user = _mapper.Map<User>(request);
+
+        // Criptografa a senha apenas se uma nova senha foi fornecida
+        if (!string.IsNullOrWhiteSpace(request.Password))
+        {
+            user.Password = _passwordHasher.HashPassword(request.Password);
+        }
+        else
+        {
+            // Mantém a senha existente se não foi fornecida uma nova
+            user.Password = existingUser.Password;
+        }
+
+        var updatedUser = await _userRepository.UpdateAsync(user);
+        return (_mapper.Map<UserResponse>(updatedUser), null);
+    }
+
+    public async Task<(UserResponse? User, ValidationResult? ValidationResult)> ChangePasswordOnFirstAccessAsync(ChangePasswordOnFirstAccessRequest request)
+    {
+        var validationResult = await _changePasswordOnFirstAccessValidator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            return (null, validationResult);
+        }
+
+        var user = await _userRepository.GetByIdAsync(request.UserId);
+        if (user == null)
+            throw new InvalidOperationException($"Usuário com ID {request.UserId} não encontrado");
+
+        if (!user.IsFirstAccess)
+            throw new InvalidOperationException("Este usuário já realizou o primeiro acesso. Use o endpoint de alteração de senha padrão.");
+
+        // Atualiza a senha e marca que não é mais o primeiro acesso
+        user.Password = _passwordHasher.HashPassword(request.NewPassword);
+        user.IsFirstAccess = false;
+
         var updatedUser = await _userRepository.UpdateAsync(user);
         return (_mapper.Map<UserResponse>(updatedUser), null);
     }

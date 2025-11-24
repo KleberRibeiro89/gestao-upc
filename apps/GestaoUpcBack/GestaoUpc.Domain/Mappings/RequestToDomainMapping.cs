@@ -8,7 +8,8 @@ public class RequestToDomainMapping : Profile
     public RequestToDomainMapping()
     {
         CreateMap<CreateUserRequest, Entities.User>()
-            .ForMember(dest => dest.Active, opt => opt.MapFrom(_ => true));
+            .ForMember(dest => dest.Active, opt => opt.MapFrom(_ => true))
+            .ForMember(dest => dest.IsFirstAccess, opt => opt.MapFrom(_ => true));
 
         CreateMap<UpdateUserRequest, Entities.User>()
             .ForMember(dest => dest.Active, opt => opt.MapFrom(_ => true));

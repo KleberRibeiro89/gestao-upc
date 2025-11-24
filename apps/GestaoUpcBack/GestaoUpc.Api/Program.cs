@@ -1,5 +1,6 @@
 using GestaoUpc.Infra.Ioc;
 using GestaoUpc.Domain.Data.Contexts;
+using GestaoUpc.Domain.Data.Seeds;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,9 @@ var app = builder.Build();
 
 // Aplica migrações automaticamente
 await ApplyMigrationsAsync(app);
+
+// Executa seeds
+await SeedDataAsync(app);
 
 app.MapDefaultEndpoints();
 
@@ -80,6 +84,38 @@ static async Task ApplyMigrationsAsync(WebApplication app)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "Ocorreu um erro ao aplicar as migrações");
+        throw;
+    }
+}
+
+// Método para executar seeds
+static async Task SeedDataAsync(WebApplication app)
+{
+    var seedEnabled = app.Configuration.GetValue<bool>("Database:SeedEnabled", defaultValue: true);
+    
+    if (!seedEnabled)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogInformation("Seeds estão desabilitadas.");
+        return;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    
+    try
+    {
+        var context = services.GetRequiredService<GestaoUpcDbContext>();
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        
+        logger.LogInformation("Executando seeds...");
+        await UserSeed.SeedAsync(context);
+        logger.LogInformation("Seeds executadas com sucesso!");
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocorreu um erro ao executar as seeds");
         throw;
     }
 }

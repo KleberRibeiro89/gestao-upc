@@ -26,6 +26,7 @@ public class UserRepository : RepositoryBase<User>, IUserRepository
                 NavigationId = x.NavigationId,
                 Name = x.Name,
                 Email = x.Email,
+                IsFirstAccess = x.IsFirstAccess,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
             }).ToPagedAsync(request); ;

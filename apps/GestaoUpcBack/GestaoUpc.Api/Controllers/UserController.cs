@@ -208,5 +208,44 @@ public class UserController : GestaoUpcController
             return StatusCode(500, ResponseBase.Fail("Erro interno do servidor"));
         }
     }
+
+    /// <summary>
+    /// Altera a senha no primeiro acesso e marca IsFirstAccess como false
+    /// </summary>
+    [HttpPost("change-password-first-access")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ChangePasswordOnFirstAccess([FromBody] ChangePasswordOnFirstAccessRequest request)
+    {
+        try
+        {
+            var (user, validationResult) = await _userService.ChangePasswordOnFirstAccessAsync(request);
+            
+            if (validationResult != null && !validationResult.IsValid)
+            {
+                return BadRequest(ResponseBase.RequestError("Erro de validação", validationResult));
+            }
+
+            if (user == null)
+                return StatusCode(500, ResponseBase.Fail("Erro ao alterar senha"));
+
+            return Ok(ResponseBase.Ok(user));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Erro de operação ao alterar senha no primeiro acesso");
+            
+            if (ex.Message.Contains("não encontrado"))
+                return NotFound(ResponseBase.Fail(ex.Message));
+            
+            return BadRequest(ResponseBase.Fail(ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao alterar senha no primeiro acesso");
+            return StatusCode(500, ResponseBase.Fail("Erro interno do servidor"));
+        }
+    }
 }
 

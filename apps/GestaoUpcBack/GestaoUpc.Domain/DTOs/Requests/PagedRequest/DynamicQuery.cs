@@ -47,25 +47,16 @@ public record PropertyFilter
     {
         if (Value is JsonElement jsonElement)
         {
-            switch (jsonElement.ValueKind)
+            return jsonElement.ValueKind switch
             {
-                case JsonValueKind.Array:
-                    return jsonElement.EnumerateArray();
-                case JsonValueKind.String:
-                    return jsonElement!.GetString()!;
-                case JsonValueKind.Number:
-                    return jsonElement.GetInt32();
-                case JsonValueKind.True:
-                    return true;
-                case JsonValueKind.False:
-                    return false;
-                case JsonValueKind.Null:
-                    return null!;
-                case JsonValueKind.Undefined:
-                case JsonValueKind.Object:
-                default:
-                    return jsonElement.ToString();
-            }
+                JsonValueKind.Array => jsonElement.EnumerateArray(),
+                JsonValueKind.String => jsonElement!.GetString()!,
+                JsonValueKind.Number => jsonElement.GetInt32(),
+                JsonValueKind.True => true,
+                JsonValueKind.False => false,
+                JsonValueKind.Null => null!,
+                _ => jsonElement.ToString(),
+            };
         }
 
         return Value;

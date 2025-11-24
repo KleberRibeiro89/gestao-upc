@@ -15,7 +15,7 @@ public record ResponseBase
         {
             Success = false,
             Message = message,
-            Errors = validationResult.Errors.Select(x => new ErrorValidation { Field = x.PropertyName, Message = x.ErrorMessage }).ToList(),
+            Errors = [.. validationResult.Errors.Select(x => new ErrorValidation { Field = x.PropertyName, Message = x.ErrorMessage })],
         };
     }
 
@@ -29,13 +29,13 @@ public record ResponseBase
         };
     }
 
-    public static ResponseBase Fail(string message) => new ResponseBase { Success = false, Message = message };
-    public static ResponseBase<T> Fail<T>(string message) => new ResponseBase<T> { Success = false, Message = message };
+    public static ResponseBase Fail(string message) => new() { Success = false, Message = message };
+    public static ResponseBase<T> Fail<T>(string message) => new() { Success = false, Message = message };
 
-    public static ResponseBase Ok() => new ResponseBase { Success = true, Message = "OK" };
-    public static ResponseBase Ok(string message) => new ResponseBase { Success = true, Message = message };
-    public static ResponseBase<T> Ok<T>(T data) => new ResponseBase<T> { Success = true, Data = data };
-    public static ResponseBase<T> Ok<T>(string message, T data) => new ResponseBase<T> { Success = true, Message = message, Data = data };
+    public static ResponseBase Ok() => new() { Success = true, Message = "OK" };
+    public static ResponseBase Ok(string message) => new() { Success = true, Message = message };
+    public static ResponseBase<T> Ok<T>(T data) => new() { Success = true, Data = data };
+    public static ResponseBase<T> Ok<T>(string message, T data) => new() { Success = true, Message = message, Data = data };
 
 }
 
